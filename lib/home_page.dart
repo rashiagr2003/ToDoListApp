@@ -60,7 +60,7 @@ class _ToDoListState extends State<ToDoList> {
                       }
                       ;
                     },
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                         backgroundColor: Colors.black,
                         child: Icon(
                           Icons.add,
