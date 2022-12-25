@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
@@ -69,29 +70,36 @@ class _ToDoListState extends State<ToDoList> {
                   ),
                 ]),
           ),
-          StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection("Todocollections")
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                if (!snapshot.hasData) {
-                  return Text('Loading...');
-                }
-                return ListView.builder(
-                  itemCount: snapshot.data!.docs.length,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return Todolist(
-                        snapshot.data!.docs[index]['notes'],
-                        snapshot.data!.docs[index]['isChecked'],
-                        snapshot.data!.docs[index].id);
-                  },
-                );
-              }),
+          Expanded(
+            child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection("Todocollections")
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+                  if (!snapshot.hasData) {
+                    return Text('Loading...');
+                  }
+                  if (snapshot.data!.docs.length == 0) {
+                    return Container(
+                      child: Center(child: Text('No Notes yet')),
+                    );
+                  }
+                  return ListView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    // shrinkWrap: true,
+                    // physics: NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return Todolist(
+                          snapshot.data!.docs[index]['notes'],
+                          snapshot.data!.docs[index]['isChecked'],
+                          snapshot.data!.docs[index].id);
+                    },
+                  );
+                }),
+          ),
         ],
       ),
     );
@@ -99,7 +107,7 @@ class _ToDoListState extends State<ToDoList> {
 
   Widget Todolist(String text, bool isMarked, String docId) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 15),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         height: 60,
@@ -126,9 +134,14 @@ class _ToDoListState extends State<ToDoList> {
               width: MediaQuery.of(context).size.width * 0.45,
               child: Text(text),
             ),
-            Icon(
-              Icons.edit,
-              size: 15,
+            GestureDetector(
+              onTap: () {
+                editText(text, docId);
+              },
+              child: Icon(
+                Icons.edit,
+                size: 15,
+              ),
             ),
             GestureDetector(
               onTap: () {
@@ -150,5 +163,54 @@ class _ToDoListState extends State<ToDoList> {
         ),
       ),
     );
+  }
+
+  TextEditingController _edit = TextEditingController();
+  void editText(String text, String documentId) {
+    _edit.clear();
+    _edit.text = text;
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: TextField(
+                    controller: _edit,
+                  ),
+                ),
+                ElevatedButton(
+                    onPressed: () {
+                      FirebaseFirestore.instance
+                          .collection('Todocollections')
+                          .doc(documentId)
+                          .update({'notes': _edit.text});
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Edit'))
+              ],
+            ),
+          ),
+        );
+      },
+    ); // showBottomSheet(
+    //   context: context,
+    //   builder: (context) {
+    //     return Scaffold(
+    // body: Container(
+    //   child: Column(
+    //     children: [
+    //       // TextField(),
+    //       // ElevatedButton(onPressed: () {}, child: Text('data'))
+    //     ],
+    //   ),
+    // ),
+    //     );
+    //   },
+    // );
   }
 }
