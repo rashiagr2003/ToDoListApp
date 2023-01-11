@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ToDoList extends StatefulWidget {
   const ToDoList({super.key});
@@ -117,6 +118,13 @@ class _ToDoListState extends State<ToDoList> {
           children: [
             GestureDetector(
               onTap: () {
+                if (isMarked == false) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Completed")));
+                } else {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Pending")));
+                }
                 FirebaseFirestore.instance
                     .collection('Todocollections')
                     .doc(docId)
@@ -191,7 +199,7 @@ class _ToDoListState extends State<ToDoList> {
                           .update({'notes': _edit.text});
                       Navigator.of(context).pop();
                     },
-                    child: Text('Edit'))
+                    child: Text('Edit')),
               ],
             ),
           ),
